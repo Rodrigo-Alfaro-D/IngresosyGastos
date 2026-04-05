@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Registro de Compras y Ventas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #e0eafc 0%, #cfdef3 100%);
+            margin: 0;
+            padding: 24px 16px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .row-panels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            padding: 1.6rem 1.8rem;
+            flex: 1;
+            min-width: 320px;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .card h2 {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 600;
+            font-size: 1.7rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            border-left: 6px solid;
+            padding-left: 1rem;
+        }
+
+        .card.compras h2 {
+            border-left-color: #2c7da0;
+            color: #1f5068;
+        }
+        .card.ventas h2 {
+            border-left-color: #2e7d64;
+            color: #1e5a48;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #2c3e4e;
+        }
+
+        input, select {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 1.2rem;
+            padding: 0.7rem 1rem;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        button {
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.8rem 1.2rem;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 0.5rem;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background: #0f172a;
+            transform: scale(0.98);
+        }
+
+        .btn-venta {
+            background: #2b7a62;
+        }
+        .btn-venta:hover {
+            background: #1e5a48;
+        }
+
+        .btn-compra {
+            background: #2c7da0;
+        }
+        .btn-compra:hover {
+            background: #1f5e7a;
+        }
+
+        .tabla-container {
+            background: white;
+            border-radius: 1.8rem;
+            margin-top: 2.2rem;
+            padding: 1rem 0.5rem 1.5rem 0.5rem;
+            box-shadow: 0 12px 28px -8px rgba(0,0,0,0.2);
+            overflow-x: auto;
+        }
+
+        .tabla-container h3 {
+            margin: 0 0 1rem 1rem;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 800px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #eef2ff;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tipo-compra { background: #dbeafe; color:#1e3a8a; }
+        .tipo-venta { background: #dcfce7; color:#166534; }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #dc2626;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: auto;
+            padding: 0 6px;
+            box-shadow: none;
+            margin: 0;
+        }
+        .delete-btn:hover {
+            background: #fee2e2;
+            transform: none;
+            border-radius: 30px;
+        }
+        .resumen {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .resumen-card {
+            background: #f1f5f9;
+            border-radius: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            text-align: center;
+            flex: 1;
+        }
+        .resumen-card span:first-child {
+            font-weight: 500;
+            color: #334155;
+        }
+        .resumen-card .valor {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-top: 6px;
+            display: block;
+        }
+        .fecha-hora {
+            font-family: monospace;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        footer {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.75rem;
+            color: #2c3e4e;
+        }
+        .info-transferencia {
+            font-size: 0.7rem;
+            color: #2c7da0;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="row-panels">
+        <!-- PANEL DE COMPRAS -->
+        <div class="card compras">
+            <h2>[+] Registrar Compra</h2>
+            <form id="formCompra">
+                <div class="form-group">
+                    <label>[DOC] Tipo de documento</label>
+                    <select id="tipoDocumento" required>
+                        <option value="Boleta">Boleta</option>
+                        <option value="Factura">Factura</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>[$] Forma de pago</label>
+                    <select id="formaPagoCompra" required>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Credito">Credito</option>
+                        <option value="Debito">Debito</option>
+                    </select>
+                </div>
+                <!-- Campos dinamicos para tarjeta (credito/debito) -->
+                <div id="tarjetaContainerCompra" style="display: none;">
+                    <div class="form-group">
+                        <label>[#] Marca / entidad de tarjeta</label>
+                        <input type="text" id="tarjetaCompra" placeholder="Ej: Visa, Mastercard, Naranja..." autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>[B] Destino de compra</label>
+                    <select id="destinoCompra" required>
+                        <option value="Negocio">Negocio (comercial)</option>
+                        <option value="Casa">Para la casa (personal)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>[$] Monto de la compra</label>
+                    <input type="number" id="montoCompra" step="0.01" placeholder="Ej: 49990" required>
+                </div>
+                <div class="form-group">
+                    <label>[i] Descripcion / Producto</label>
+                    <input type="text" id="descCompra" placeholder="Ej: Notebook, mercado, etc.">
+                </div>
+                <button type="submit" class="btn-compra">+ Agregar Compra</button>
+            </form>
+        </div>
+
+        <!-- PANEL DE VENTAS -->
+        <div class="card ventas">
+            <h2>[$] Registrar Venta</h2>
+            <form id="formVenta">
+                <div class="form-group">
+                    <label>[$] Forma de pago (venta)</label>
+                    <select id="formaPagoVenta" required>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Debito">Debito</option>
+                        <option value="Credito">Credito</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>[i] Concepto / Producto vendido</label>
+                    <input type="text" id="conceptoVenta" placeholder="Ej: Venta de silla, servicio..." required>
+                </div>
+                <div class="form-group">
+                    <label>[$] Monto de la venta</label>
+                    <input type="number" id="montoVenta" step="0.01" placeholder="Monto recibido" required>
+                </div>
+                <button type="submit" class="btn-venta">+ Agregar Venta</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLA DE MOVIMIENTOS Y RESUMEN -->
+    <div class="tabla-container">
+        <h3>[LISTA] Historial de transacciones</h3>
+        <div style="overflow-x: auto;">
+            <table id="tablaMovimientos">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Tipo</th>
+                        <th>Documento</th>
+                        <th>Forma pago</th>
+                        <th>Tarjeta</th>
+                        <th>Destino/Concepto</th>
+                        <th>Monto</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyMovimientos">
+                    <tr><td colspan="8" style="text-align:center;">No hay registros aun</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="resumen">
+            <div class="resumen-card"><span>[-] Total Compras</span><span class="valor" id="totalCompras">0.00</span></div>
+            <div class="resumen-card"><span>[+] Total Ventas</span><span class="valor" id="totalVentas">0.00</span></div>
+            <div class="resumen-card"><span>[=] Balance (Ventas - Compras)</span><span class="valor" id="balance">0.00</span></div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 0.8rem; gap: 10px;">
+            <button id="limpiarTodoBtn" style="background:#475569; width: auto; padding: 0.5rem 1.2rem;">[X] Limpiar todo</button>
+        </div>
+    </div>
+    <footer>[OK] Compra: boleta/factura + formas de pago: Efectivo, Transferencia, Credito, Debito (si es Credito/Debito solicita tarjeta) + destino negocio/casa. [OK] Venta: Efectivo, Transferencia, Debito, Credito. Cada movimiento guarda FECHA y HORA.</footer>
+</div>
+
+<script>
+    let movimientos = [];
+
+    function obtenerFechaHoraActual() {
+        const ahora = new Date();
+        const dia = String(ahora.getDate()).padStart(2, '0');
+        const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+        const anio = ahora.getFullYear();
+        const horas = String(ahora.getHours()).padStart(2, '0');
+        const minutos = String(ahora.getMinutes()).padStart(2, '0');
+        const segundos = String(ahora.getSeconds()).padStart(2, '0');
+        return `${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`;
+    }
+
+    function cargarDesdeStorage() {
+        const stored = localStorage.getItem("comprasVentasApp_v5");
+        if(stored) {
+            try {
+                movimientos = JSON.parse(stored);
+                let actualizado = false;
+                movimientos = movimientos.map(mov => {
+                    if(!mov.fecha) {
+                        actualizado = true;
+                        return { ...mov, fecha: obtenerFechaHoraActual() };
+                    }
+                    return mov;
+                });
+                if(actualizado) guardarEnStorage();
+            } catch(e) { movimientos = []; }
+        } else {
+            const ahoraEjemplo = new Date();
+            const hace2horas = new Date(ahoraEjemplo.getTime() - 2*60*60*1000);
+            const ayer = new Date(ahoraEjemplo.getTime() - 24*60*60*1000);
+            
+            function formatFecha(date) {
+                const d = String(date.getDate()).padStart(2,'0');
+                const m = String(date.getMonth()+1).padStart(2,'0');
+                const y = date.getFullYear();
+                const h = String(date.getHours()).padStart(2,'0');
+                const min = String(date.getMinutes()).padStart(2,'0');
+                const s = String(date.getSeconds()).padStart(2,'0');
+                return `${d}/${m}/${y} ${h}:${min}:${s}`;
+            }
+            
+            movimientos = [
+                { id: Date.now()+1, tipo: "compra", documento: "Factura", formaPago: "Transferencia", tarjeta: null, destino: "Negocio", monto: 125000, descripcion: "Laptop", fecha: formatFecha(ayer) },
+                { id: Date.now()+2, tipo: "compra", documento: "Boleta", formaPago: "Efectivo", tarjeta: null, destino: "Casa", monto: 45800, descripcion: "Comida", fecha: formatFecha(hace2horas) },
+                { id: Date.now()+3, tipo: "venta", formaPago: "Transferencia", concepto: "Venta de monitor", monto: 89000, tarjeta: null, fecha: formatFecha(ahoraEjemplo) }
+            ];
+        }
+        renderizarTabla();
+        actualizarResumen();
+    }
+
+    function guardarEnStorage() {
+        localStorage.setItem("comprasVentasApp_v5", JSON.stringify(movimientos));
+    }
+
+    function formatearMonto(monto) {
+        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(monto);
+    }
+
+    function renderizarTabla() {
+        const tbody = document.getElementById("tbodyMovimientos");
+        if(!tbody) return;
+        if(movimientos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Sin movimientos registrados</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = "";
+        const movimientosOrdenados = [...movimientos].sort((a,b) => {
+            const parseFecha = (fechaStr) => {
+                if(!fechaStr) return 0;
+                let [fechaPart, horaPart] = fechaStr.split(' ');
+                if(!horaPart) return 0;
+                let [dia, mes, anio] = fechaPart.split('/');
+                let [horas, minutos, segundos] = horaPart.split(':');
+                return new Date(anio, mes-1, dia, horas, minutos, segundos).getTime();
+            };
+            return parseFecha(b.fecha) - parseFecha(a.fecha);
+        });
+        
+        movimientosOrdenados.forEach(mov => {
+            const row = tbody.insertRow();
+            const fechaCell = row.insertCell(0);
+            fechaCell.className = "fecha-hora";
+            fechaCell.innerText = mov.fecha || "Sin fecha";
+            
+            const tipoCell = row.insertCell(1);
+            const tipoBadge = document.createElement("span");
+            tipoBadge.className = `badge ${mov.tipo === 'compra' ? 'tipo-compra' : 'tipo-venta'}`;
+            tipoBadge.innerText = mov.tipo === 'compra' ? 'COMPRA' : 'VENTA';
+            tipoCell.appendChild(tipoBadge);
+            
+            const docCell = row.insertCell(2);
+            docCell.innerText = mov.tipo === 'compra' ? (mov.documento || '—') : '—';
+            
+            const pagoCell = row.insertCell(3);
+            pagoCell.innerText = mov.formaPago || '—';
+            
+            const tarjetaCell = row.insertCell(4);
+            if(mov.tarjeta && mov.tarjeta.trim() !== "") {
+                tarjetaCell.innerText = mov.tarjeta;
+            } else {
+                tarjetaCell.innerText = '—';
+            }
+            
+            const destinoConceptoCell = row.insertCell(5);
+            if(mov.tipo === 'compra') {
+                destinoConceptoCell.innerText = `${mov.destino || '?'} ${mov.descripcion ? ` (${mov.descripcion})` : ''}`;
+            } else {
+                destinoConceptoCell.innerText = mov.concepto || 'Venta registrada';
+            }
+            
+            const montoCell = row.insertCell(6);
+            montoCell.innerText = formatearMonto(mov.monto);
+            montoCell.style.fontWeight = 'bold';
+            montoCell.style.color = mov.tipo === 'compra' ? '#b91c1c' : '#15803d';
+            
+            const accionCell = row.insertCell(7);
+            const delBtn = document.createElement("button");
+            delBtn.innerHTML = "[X]";
+            delBtn.className = "delete-btn";
+            delBtn.title = "Eliminar registro";
+            delBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                eliminarMovimiento(mov.id);
+            });
+            accionCell.appendChild(delBtn);
+        });
+    }
+
+    function eliminarMovimiento(id) {
+        movimientos = movimientos.filter(m => m.id !== id);
+        guardarEnStorage();
+        renderizarTabla();
+        actualizarResumen();
+    }
+
+    function actualizarResumen() {
+        let totalCompras = 0;
+        let totalVentas = 0;
+        movimientos.forEach(mov => {
+            if(mov.tipo === 'compra') totalCompras += mov.monto;
+            else totalVentas += mov.monto;
+        });
+        const balance = totalVentas - totalCompras;
+        document.getElementById("totalCompras").innerText = formatearMonto(totalCompras);
+        document.getElementById("totalVentas").innerText = formatearMonto(totalVentas);
+        document.getElementById("balance").innerText = formatearMonto(balance);
+        const balanceSpan = document.getElementById("balance");
+        if(balance >= 0) balanceSpan.style.color = "#2b7a62";
+        else balanceSpan.style.color = "#b91c1c";
+    }
+
+    const formaPagoCompraSelect = document.getElementById("formaPagoCompra");
+    const tarjetaContainer = document.getElementById("tarjetaContainerCompra");
+    const tarjetaInput = document.getElementById("tarjetaCompra");
+
+    function toggleTarjetaCompra() {
+        const valor = formaPagoCompraSelect.value;
+        // Solo para Credito y Debito se solicita tarjeta (Transferencia y Efectivo no)
+        if(valor === "Credito" || valor === "Debito") {
+            tarjetaContainer.style.display = "block";
+            tarjetaInput.required = true;
+        } else {
+            tarjetaContainer.style.display = "none";
+            tarjetaInput.required = false;
+            tarjetaInput.value = "";
+        }
+    }
+
+    if(formaPagoCompraSelect) {
+        formaPagoCompraSelect.addEventListener("change", toggleTarjetaCompra);
+        toggleTarjetaCompra();
+    }
+
+    const formCompra = document.getElementById("formCompra");
+    formCompra.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const documento = document.getElementById("tipoDocumento").value;
+        const formaPago = formaPagoCompraSelect.value;
+        let tarjeta = null;
+        if(formaPago === "Credito" || formaPago === "Debito") {
+            tarjeta = tarjetaInput.value.trim();
+            if(tarjeta === "") {
+                alert("Por favor, indique con que tarjeta fue pagada la compra");
+                return;
+            }
+        }
+        const destino = document.getElementById("destinoCompra").value;
+        let monto = parseFloat(document.getElementById("montoCompra").value);
+        const descripcion = document.getElementById("descCompra").value.trim() || "Sin detalle";
+        if(isNaN(monto) || monto <= 0) {
+            alert("Ingrese un monto valido mayor a cero.");
+            return;
+        }
+        monto = parseFloat(monto.toFixed(2));
+        
+        const nuevaCompra = {
+            id: Date.now(),
+            tipo: "compra",
+            documento: documento,
+            formaPago: formaPago,
+            tarjeta: tarjeta,
+            destino: destino,
+            monto: monto,
+            descripcion: descripcion,
+            fecha: obtenerFechaHoraActual()
+        };
+        movimientos.push(nuevaCompra);
+        guardarEnStorage();
+        renderizarTabla();
+        actualizarResumen();
+        formCompra.reset();
+        document.getElementById("tipoDocumento").value = "Boleta";
+        formaPagoCompraSelect.value = "Efectivo";
+        toggleTarjetaCompra();
+        document.getElementById("destinoCompra").value = "Negocio";
+        document.getElementById("descCompra").value = "";
+        document.getElementById("montoCompra").value = "";
+    });
+
+    const formVenta = document.getElementById("formVenta");
+    formVenta.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formaPagoVenta = document.getElementById("formaPagoVenta").value;
+        const concepto = document.getElementById("conceptoVenta").value.trim();
+        let monto = parseFloat(document.getElementById("montoVenta").value);
+        if(!concepto) {
+            alert("Por favor ingrese un concepto o producto vendido.");
+            return;
+        }
+        if(isNaN(monto) || monto <= 0) {
+            alert("Ingrese un monto de venta valido.");
+            return;
+        }
+        monto = parseFloat(monto.toFixed(2));
+        
+        const nuevaVenta = {
+            id: Date.now(),
+            tipo: "venta",
+            formaPago: formaPagoVenta,
+            concepto: concepto,
+            monto: monto,
+            tarjeta: null,
+            fecha: obtenerFechaHoraActual()
+        };
+        movimientos.push(nuevaVenta);
+        guardarEnStorage();
+        renderizarTabla();
+        actualizarResumen();
+        formVenta.reset();
+        document.getElementById("formaPagoVenta").value = "Efectivo";
+        document.getElementById("conceptoVenta").value = "";
+        document.getElementById("montoVenta").value = "";
+    });
+
+    const limpiarBtn = document.getElementById("limpiarTodoBtn");
+    limpiarBtn.addEventListener("click", () => {
+        if(confirm("Eliminar TODOS los registros de compras y ventas?")) {
+            movimientos = [];
+            guardarEnStorage();
+            renderizarTabla();
+            actualizarResumen();
+        }
+    });
+
+    cargarDesdeStorage();
+</script>
+</body>
+</html>
