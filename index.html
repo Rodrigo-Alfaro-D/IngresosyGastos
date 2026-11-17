@@ -439,16 +439,16 @@
             tipoCell.appendChild(tipoBadge);
             
             const docCell = row.insertCell(2);
-            docCell.innerText = mov.tipo === 'compra' ? (mov.documento || '—') : '—';
+            docCell.innerText = mov.tipo === 'compra' ? (mov.documento || 'Â—') : 'Â—';
             
             const pagoCell = row.insertCell(3);
-            pagoCell.innerText = mov.formaPago || '—';
+            pagoCell.innerText = mov.formaPago || 'Â—';
             
             const tarjetaCell = row.insertCell(4);
             if(mov.tarjeta && mov.tarjeta.trim() !== "") {
                 tarjetaCell.innerText = mov.tarjeta;
             } else {
-                tarjetaCell.innerText = '—';
+                tarjetaCell.innerText = 'Â—';
             }
             
             const destinoConceptoCell = row.insertCell(5);
