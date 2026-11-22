@@ -26,6 +26,68 @@
             margin: 0 auto;
         }
 
+        /* ---------- LOGIN ---------- */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: 2rem;
+            padding: 2.2rem 2rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            margin: 0 0 0.4rem 0;
+            font-size: 1.8rem;
+            color: #1e293b;
+        }
+
+        .login-card p.subtitulo {
+            margin: 0 0 1.8rem 0;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .login-card .form-group {
+            text-align: left;
+        }
+
+        .login-error {
+            color: #b91c1c;
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-height: 1.2rem;
+            margin-top: -0.6rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .login-card button {
+            background: #1e293b;
+            margin-top: 0.4rem;
+        }
+
+        .login-card button:hover {
+            background: #0f172a;
+        }
+
+        /* ---------- APP (oculta hasta login) ---------- */
+        #appPrincipal {
+            display: none;
+        }
+
         .row-panels {
             display: flex;
             flex-wrap: wrap;
@@ -233,10 +295,73 @@
             color: #2c7da0;
             margin-top: 4px;
         }
+
+        /* Barra superior con usuario y cerrar sesión */
+        .barra-usuario {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .barra-usuario .usuario-tag {
+            background: #ffffff;
+            border-radius: 40px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            box-shadow: 0 4px 12px -4px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+
+        .barra-usuario button {
+            width: auto;
+            margin: 0;
+            background: #475569;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .barra-usuario button:hover {
+            background: #334155;
+        }
     </style>
 </head>
 <body>
-<div class="app-container">
+
+<!-- ========== PANTALLA DE LOGIN ========== -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+        <h2>🔐 Acceso</h2>
+        <p class="subtitulo">Registro de Compras y Ventas</p>
+        <form id="formLogin">
+            <div class="form-group">
+                <label>Usuario</label>
+                <select id="loginUsuario" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="Rodrigo">Rodrigo</option>
+                    <option value="Julia">Julia</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Clave</label>
+                <input type="password" id="loginClave" placeholder="Ingrese la clave" required autocomplete="off">
+            </div>
+            <div class="login-error" id="loginError"></div>
+            <button type="submit">Ingresar</button>
+        </form>
+    </div>
+</div>
+
+<!-- ========== APLICACIÓN PRINCIPAL ========== -->
+<div class="app-container" id="appPrincipal">
+    <div class="barra-usuario">
+        <span class="usuario-tag" id="usuarioActivo">👤 Usuario</span>
+        <button id="cerrarSesionBtn">Cerrar sesión</button>
+    </div>
+
     <div class="row-panels">
         <!-- PANEL DE COMPRAS -->
         <div class="card compras">
@@ -258,7 +383,6 @@
                         <option value="Debito">Debito</option>
                     </select>
                 </div>
-                <!-- Campos dinamicos para tarjeta (credito/debito) -->
                 <div id="tarjetaContainerCompra" style="display: none;">
                     <div class="form-group">
                         <label>[#] Marca / entidad de tarjeta</label>
@@ -345,7 +469,73 @@
 </div>
 
 <script>
+    /* ============================================================
+       SISTEMA DE LOGIN
+       ============================================================ */
+    const USUARIOS_VALIDOS = ["Rodrigo", "Julia"];
+    const CLAVE_UNICA = "J1234R";
+    const SESSION_KEY = "comprasVentasApp_sesion";
+
+    function iniciarSesion(usuario) {
+        sessionStorage.setItem(SESSION_KEY, usuario);
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("appPrincipal").style.display = "block";
+        document.getElementById("usuarioActivo").innerText = "👤 " + usuario;
+        // Cargar los datos una vez que la app es visible
+        cargarDesdeStorage();
+    }
+
+    function cerrarSesion() {
+        sessionStorage.removeItem(SESSION_KEY);
+        document.getElementById("appPrincipal").style.display = "none";
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.getElementById("formLogin").reset();
+        document.getElementById("loginError").innerText = "";
+    }
+
+    const formLogin = document.getElementById("formLogin");
+    formLogin.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const usuario = document.getElementById("loginUsuario").value;
+        const clave = document.getElementById("loginClave").value;
+        const errorDiv = document.getElementById("loginError");
+
+        if(!usuario) {
+            errorDiv.innerText = "Seleccione un usuario.";
+            return;
+        }
+        if(!USUARIOS_VALIDOS.includes(usuario)) {
+            errorDiv.innerText = "Usuario no reconocido.";
+            return;
+        }
+        if(clave !== CLAVE_UNICA) {
+            errorDiv.innerText = "Clave incorrecta. Intente nuevamente.";
+            return;
+        }
+        errorDiv.innerText = "";
+        iniciarSesion(usuario);
+    });
+
+    document.getElementById("cerrarSesionBtn").addEventListener("click", () => {
+        if(confirm("¿Desea cerrar sesión?")) {
+            cerrarSesion();
+        }
+    });
+
+    // Verificar si ya hay una sesión activa
+    (function verificarSesion() {
+        const usuarioGuardado = sessionStorage.getItem(SESSION_KEY);
+        if(usuarioGuardado && USUARIOS_VALIDOS.includes(usuarioGuardado)) {
+            iniciarSesion(usuarioGuardado);
+        }
+        // Si no, se queda mostrando el overlay de login
+    })();
+
+    /* ============================================================
+       LÓGICA DE LA APLICACIÓN (igual que antes)
+       ============================================================ */
     let movimientos = [];
+    let appInicializada = false;
 
     function obtenerFechaHoraActual() {
         const ahora = new Date();
@@ -377,7 +567,7 @@
             const ahoraEjemplo = new Date();
             const hace2horas = new Date(ahoraEjemplo.getTime() - 2*60*60*1000);
             const ayer = new Date(ahoraEjemplo.getTime() - 24*60*60*1000);
-            
+
             function formatFecha(date) {
                 const d = String(date.getDate()).padStart(2,'0');
                 const m = String(date.getMonth()+1).padStart(2,'0');
@@ -387,7 +577,7 @@
                 const s = String(date.getSeconds()).padStart(2,'0');
                 return `${d}/${m}/${y} ${h}:${min}:${s}`;
             }
-            
+
             movimientos = [
                 { id: Date.now()+1, tipo: "compra", documento: "Factura", formaPago: "Transferencia", tarjeta: null, destino: "Negocio", monto: 125000, descripcion: "Laptop", fecha: formatFecha(ayer) },
                 { id: Date.now()+2, tipo: "compra", documento: "Boleta", formaPago: "Efectivo", tarjeta: null, destino: "Casa", monto: 45800, descripcion: "Comida", fecha: formatFecha(hace2horas) },
@@ -396,6 +586,10 @@
         }
         renderizarTabla();
         actualizarResumen();
+        if (!appInicializada) {
+            inicializarListeners();
+            appInicializada = true;
+        }
     }
 
     function guardarEnStorage() {
@@ -425,44 +619,44 @@
             };
             return parseFecha(b.fecha) - parseFecha(a.fecha);
         });
-        
+
         movimientosOrdenados.forEach(mov => {
             const row = tbody.insertRow();
             const fechaCell = row.insertCell(0);
             fechaCell.className = "fecha-hora";
             fechaCell.innerText = mov.fecha || "Sin fecha";
-            
+
             const tipoCell = row.insertCell(1);
             const tipoBadge = document.createElement("span");
             tipoBadge.className = `badge ${mov.tipo === 'compra' ? 'tipo-compra' : 'tipo-venta'}`;
             tipoBadge.innerText = mov.tipo === 'compra' ? 'COMPRA' : 'VENTA';
             tipoCell.appendChild(tipoBadge);
-            
+
             const docCell = row.insertCell(2);
-            docCell.innerText = mov.tipo === 'compra' ? (mov.documento || '') : '';
-            
+            docCell.innerText = mov.tipo === 'compra' ? (mov.documento || '—') : '—';
+
             const pagoCell = row.insertCell(3);
-            pagoCell.innerText = mov.formaPago || '';
-            
+            pagoCell.innerText = mov.formaPago || '—';
+
             const tarjetaCell = row.insertCell(4);
             if(mov.tarjeta && mov.tarjeta.trim() !== "") {
                 tarjetaCell.innerText = mov.tarjeta;
             } else {
-                tarjetaCell.innerText = '';
+                tarjetaCell.innerText = '—';
             }
-            
+
             const destinoConceptoCell = row.insertCell(5);
             if(mov.tipo === 'compra') {
                 destinoConceptoCell.innerText = `${mov.destino || '?'} ${mov.descripcion ? ` (${mov.descripcion})` : ''}`;
             } else {
                 destinoConceptoCell.innerText = mov.concepto || 'Venta registrada';
             }
-            
+
             const montoCell = row.insertCell(6);
             montoCell.innerText = formatearMonto(mov.monto);
             montoCell.style.fontWeight = 'bold';
             montoCell.style.color = mov.tipo === 'compra' ? '#b91c1c' : '#15803d';
-            
+
             const accionCell = row.insertCell(7);
             const delBtn = document.createElement("button");
             delBtn.innerHTML = "[X]";
@@ -499,120 +693,117 @@
         else balanceSpan.style.color = "#b91c1c";
     }
 
-    const formaPagoCompraSelect = document.getElementById("formaPagoCompra");
-    const tarjetaContainer = document.getElementById("tarjetaContainerCompra");
-    const tarjetaInput = document.getElementById("tarjetaCompra");
+    function inicializarListeners() {
+        const formaPagoCompraSelect = document.getElementById("formaPagoCompra");
+        const tarjetaContainer = document.getElementById("tarjetaContainerCompra");
+        const tarjetaInput = document.getElementById("tarjetaCompra");
 
-    function toggleTarjetaCompra() {
-        const valor = formaPagoCompraSelect.value;
-        // Solo para Credito y Debito se solicita tarjeta (Transferencia y Efectivo no)
-        if(valor === "Credito" || valor === "Debito") {
-            tarjetaContainer.style.display = "block";
-            tarjetaInput.required = true;
-        } else {
-            tarjetaContainer.style.display = "none";
-            tarjetaInput.required = false;
-            tarjetaInput.value = "";
-        }
-    }
-
-    if(formaPagoCompraSelect) {
-        formaPagoCompraSelect.addEventListener("change", toggleTarjetaCompra);
-        toggleTarjetaCompra();
-    }
-
-    const formCompra = document.getElementById("formCompra");
-    formCompra.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const documento = document.getElementById("tipoDocumento").value;
-        const formaPago = formaPagoCompraSelect.value;
-        let tarjeta = null;
-        if(formaPago === "Credito" || formaPago === "Debito") {
-            tarjeta = tarjetaInput.value.trim();
-            if(tarjeta === "") {
-                alert("Por favor, indique con que tarjeta fue pagada la compra");
-                return;
+        function toggleTarjetaCompra() {
+            const valor = formaPagoCompraSelect.value;
+            if(valor === "Credito" || valor === "Debito") {
+                tarjetaContainer.style.display = "block";
+                tarjetaInput.required = true;
+            } else {
+                tarjetaContainer.style.display = "none";
+                tarjetaInput.required = false;
+                tarjetaInput.value = "";
             }
         }
-        const destino = document.getElementById("destinoCompra").value;
-        let monto = parseFloat(document.getElementById("montoCompra").value);
-        const descripcion = document.getElementById("descCompra").value.trim() || "Sin detalle";
-        if(isNaN(monto) || monto <= 0) {
-            alert("Ingrese un monto valido mayor a cero.");
-            return;
-        }
-        monto = parseFloat(monto.toFixed(2));
-        
-        const nuevaCompra = {
-            id: Date.now(),
-            tipo: "compra",
-            documento: documento,
-            formaPago: formaPago,
-            tarjeta: tarjeta,
-            destino: destino,
-            monto: monto,
-            descripcion: descripcion,
-            fecha: obtenerFechaHoraActual()
-        };
-        movimientos.push(nuevaCompra);
-        guardarEnStorage();
-        renderizarTabla();
-        actualizarResumen();
-        formCompra.reset();
-        document.getElementById("tipoDocumento").value = "Boleta";
-        formaPagoCompraSelect.value = "Efectivo";
+
+        formaPagoCompraSelect.addEventListener("change", toggleTarjetaCompra);
         toggleTarjetaCompra();
-        document.getElementById("destinoCompra").value = "Negocio";
-        document.getElementById("descCompra").value = "";
-        document.getElementById("montoCompra").value = "";
-    });
 
-    const formVenta = document.getElementById("formVenta");
-    formVenta.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const formaPagoVenta = document.getElementById("formaPagoVenta").value;
-        const concepto = document.getElementById("conceptoVenta").value.trim();
-        let monto = parseFloat(document.getElementById("montoVenta").value);
-        if(!concepto) {
-            alert("Por favor ingrese un concepto o producto vendido.");
-            return;
-        }
-        if(isNaN(monto) || monto <= 0) {
-            alert("Ingrese un monto de venta valido.");
-            return;
-        }
-        monto = parseFloat(monto.toFixed(2));
-        
-        const nuevaVenta = {
-            id: Date.now(),
-            tipo: "venta",
-            formaPago: formaPagoVenta,
-            concepto: concepto,
-            monto: monto,
-            tarjeta: null,
-            fecha: obtenerFechaHoraActual()
-        };
-        movimientos.push(nuevaVenta);
-        guardarEnStorage();
-        renderizarTabla();
-        actualizarResumen();
-        formVenta.reset();
-        document.getElementById("formaPagoVenta").value = "Efectivo";
-        document.getElementById("conceptoVenta").value = "";
-        document.getElementById("montoVenta").value = "";
-    });
+        const formCompra = document.getElementById("formCompra");
+        formCompra.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const documento = document.getElementById("tipoDocumento").value;
+            const formaPago = formaPagoCompraSelect.value;
+            let tarjeta = null;
+            if(formaPago === "Credito" || formaPago === "Debito") {
+                tarjeta = tarjetaInput.value.trim();
+                if(tarjeta === "") {
+                    alert("Por favor, indique con que tarjeta fue pagada la compra");
+                    return;
+                }
+            }
+            const destino = document.getElementById("destinoCompra").value;
+            let monto = parseFloat(document.getElementById("montoCompra").value);
+            const descripcion = document.getElementById("descCompra").value.trim() || "Sin detalle";
+            if(isNaN(monto) || monto <= 0) {
+                alert("Ingrese un monto valido mayor a cero.");
+                return;
+            }
+            monto = parseFloat(monto.toFixed(2));
 
-    const limpiarBtn = document.getElementById("limpiarTodoBtn");
-    limpiarBtn.addEventListener("click", () => {
-        if(confirm("Eliminar TODOS los registros de compras y ventas?")) {
-            movimientos = [];
+            const nuevaCompra = {
+                id: Date.now(),
+                tipo: "compra",
+                documento: documento,
+                formaPago: formaPago,
+                tarjeta: tarjeta,
+                destino: destino,
+                monto: monto,
+                descripcion: descripcion,
+                fecha: obtenerFechaHoraActual()
+            };
+            movimientos.push(nuevaCompra);
             guardarEnStorage();
             renderizarTabla();
             actualizarResumen();
-        }
-    });
+            formCompra.reset();
+            document.getElementById("tipoDocumento").value = "Boleta";
+            formaPagoCompraSelect.value = "Efectivo";
+            toggleTarjetaCompra();
+            document.getElementById("destinoCompra").value = "Negocio";
+            document.getElementById("descCompra").value = "";
+            document.getElementById("montoCompra").value = "";
+        });
 
-    cargarDesdeStorage();
+        const formVenta = document.getElementById("formVenta");
+        formVenta.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const formaPagoVenta = document.getElementById("formaPagoVenta").value;
+            const concepto = document.getElementById("conceptoVenta").value.trim();
+            let monto = parseFloat(document.getElementById("montoVenta").value);
+            if(!concepto) {
+                alert("Por favor ingrese un concepto o producto vendido.");
+                return;
+            }
+            if(isNaN(monto) || monto <= 0) {
+                alert("Ingrese un monto de venta valido.");
+                return;
+            }
+            monto = parseFloat(monto.toFixed(2));
+
+            const nuevaVenta = {
+                id: Date.now(),
+                tipo: "venta",
+                formaPago: formaPagoVenta,
+                concepto: concepto,
+                monto: monto,
+                tarjeta: null,
+                fecha: obtenerFechaHoraActual()
+            };
+            movimientos.push(nuevaVenta);
+            guardarEnStorage();
+            renderizarTabla();
+            actualizarResumen();
+            formVenta.reset();
+            document.getElementById("formaPagoVenta").value = "Efectivo";
+            document.getElementById("conceptoVenta").value = "";
+            document.getElementById("montoVenta").value = "";
+        });
+
+        const limpiarBtn = document.getElementById("limpiarTodoBtn");
+        limpiarBtn.addEventListener("click", () => {
+            if(confirm("Eliminar TODOS los registros de compras y ventas?")) {
+                movimientos = [];
+                guardarEnStorage();
+                renderizarTabla();
+                actualizarResumen();
+            }
+        });
+    }
 </script>
 </body>
 </html>
